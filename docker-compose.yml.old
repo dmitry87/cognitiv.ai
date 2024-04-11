@@ -1,0 +1,124 @@
+version: '3'
+
+services:
+  spark-master:
+    image: bitnami/spark:3.3.0-debian-11-r44
+    environment:
+      - SPARK_LOCAL_IP=spark-master
+      - SPARK_MODE=master
+      - SPARK_DAEMON_JAVA_OPTS=-Dlog4j.configuration=file:/opt/bitnami/spark/conf/log4j2.properties
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - GREEN_TAXI=/opt/bitnami/spark/taxi_data/taxi/green
+      - YELLOW_TAXI=/opt/bitnami/spark/taxi_data/taxi/yellow
+    volumes:
+      - type: bind
+        source: ./conf/log4j2.properties
+        target: /opt/bitnami/spark/conf/log4j2.properties
+      - type: bind
+        source: ./data/
+        target: /opt/bitnami/spark/taxi_data/
+      - type: bind
+        source: ./target/
+        target: /opt/bitnami/spark/app-jars/
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+      - '7078:7078'
+      - '4040:4040'
+    networks:
+      - spark
+
+  spark-worker-1:
+    image: bitnami/spark:3.3.0-debian-11-r44
+    environment:
+      - SPARK_DAEMON_JAVA_OPTS=-Dlog4j.configuration=file:/opt/bitnami/spark/conf/log4j2.properties
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=3G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - GREEN_TAXI=/opt/bitnami/spark/taxi_data/taxi/green
+      - YELLOW_TAXI=/opt/bitnami/spark/taxi_data/taxi/yellow
+      - SPARK_WORKER_PORT=40001
+      - SPARK_DRIVER_HOST=spark://spark-master
+    volumes:
+      - type: bind
+        source: ./conf/log4j2.properties
+        target: /opt/bitnami/spark/conf/log4j2.properties
+      - type: bind
+        source: ./data/
+        target: /opt/bitnami/spark/taxi_data/
+      - type: bind
+        source: ./target/
+        target: /opt/bitnami/spark/app-jars/
+    ports:
+      - '8081:8081'
+    networks:
+      - spark
+    depends_on:
+      - spark-master
+  spark-worker-2:
+    image: bitnami/spark:3.3.0-debian-11-r44
+    environment:
+      - SPARK_DAEMON_JAVA_OPTS=-Dlog4j.configuration=file:/opt/bitnami/spark/conf/log4j2.properties
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=3G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - GREEN_TAXI=/opt/bitnami/spark/taxi_data/taxi/green
+      - YELLOW_TAXI=/opt/bitnami/spark/taxi_data/taxi/yellow
+      - SPARK_WORKER_PORT=40000
+    volumes:
+      - type: bind
+        source: ./conf/log4j2.properties
+        target: /opt/bitnami/spark/conf/log4j2.properties
+      - type: bind
+        source: ./data/
+        target: /opt/bitnami/spark/taxi_data/
+      - type: bind
+        source: ./target/
+        target: /opt/bitnami/spark/app-jars/
+    ports:
+      - '8082:8081'
+    networks:
+      - spark
+    depends_on:
+      - spark-master
+
+#  spark-driver:
+#    image: bitnami/spark:3.3.0-debian-11-r44
+#    container_name: spark-driver
+#    environment:
+#      - SPARK_DAEMON_JAVA_OPTS=-Dlog4j.configuration=file:/opt/bitnami/spark/conf/log4j2.properties
+#      - SPARK_MASTER_URL=spark://spark-master:7077
+#      - GREEN_TAXI=/opt/bitnami/spark/taxi_data/taxi/green
+#      - YELLOW_TAXI=/opt/bitnami/spark/taxi_data/taxi/yellow
+#    volumes:
+#      - type: bind
+#        source: ./conf/log4j2.properties
+#        target: /opt/bitnami/spark/conf/log4j2.properties
+#      - type: bind
+#        source: ./data/
+#        target: /opt/bitnami/spark/taxi_data/
+#      - type: bind
+#        source: ./target/
+#        target: /opt/bitnami/spark/app-jars/
+#    ports:
+##      - '7078:7078'
+#      - '4040:4040'
+#    networks:
+#      - spark
+
+networks:
+  spark:
+    driver: bridge
